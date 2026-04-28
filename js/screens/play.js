@@ -15,10 +15,21 @@ game.PlayScreen = me.ScreenObject.extend({
         }
 
         me.input.bindKey(me.input.KEY.SPACE, "fly", true);
+        // [Manutencao - Leonardo Santos] CR#12 Seta para cima e W tambem disparam "fly"
+        me.input.bindKey(me.input.KEY.UP, "fly", true);
+        me.input.bindKey(me.input.KEY.W, "fly", true);
+        // [Manutencao - Gabriel de Oliveira] CR#4 Teclas P/ESC sao re-vinculadas a acao "pause"
+        me.input.bindKey(me.input.KEY.P, "pause", true);
+        me.input.bindKey(me.input.KEY.ESC, "pause", true);
+
         game.data.score = 0;
         game.data.steps = 0;
         game.data.start = false;
-        game.data.newHiscore = false;
+        game.data.newHiScore = false;
+        // [Manutencao - Gabriel de Oliveira] CR#4 Reseta estado de pausa ao iniciar partida
+        game.data.paused = false;
+        // [Manutencao - Marcos Winicios] CR#15 Reinicia tema para "day" a cada partida
+        game.data.theme = 'day';
 
         me.game.world.addChild(new BackgroundLayer('bg', 1));
 
@@ -36,6 +47,16 @@ game.PlayScreen = me.ScreenObject.extend({
 
         //inputs
         me.input.bindPointer(me.input.pointer.LEFT, me.input.KEY.SPACE);
+        // [Manutencao - Marcos Winicios] CR#14 Botao direito tambem dispara "fly"
+        me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.SPACE);
+
+        // [Manutencao - Gabriel de Oliveira] CR#4 Toggle de pausa via teclado (P/ESC)
+        var self = this;
+        this.pauseHandler = me.event.subscribe(me.event.KEYDOWN, function (action) {
+            if (action === 'pause' && game.data.start) {
+                self.togglePause();
+            }
+        });
 
         this.getReady = new me.Sprite(
             me.game.viewport.width/2,
@@ -54,6 +75,20 @@ game.PlayScreen = me.ScreenObject.extend({
             }).start();
     },
 
+    // [Manutencao - Gabriel de Oliveira] CR#4 Alterna estado pausado/rodando e aciona me.state.pause/resume
+    togglePause: function () {
+        if (game.data.paused) {
+            game.data.paused = false;
+            if (me.state.resume) { me.state.resume(); }
+            if (!game.data.muted) { me.audio.play('theme', true); }
+        } else {
+            game.data.paused = true;
+            if (me.state.pause) { me.state.pause(); }
+            me.audio.stop('theme');
+        }
+        return game.data.paused;
+    },
+
     onDestroyEvent: function() {
         me.audio.stopTrack('theme');
         // free the stored instance
@@ -61,7 +96,16 @@ game.PlayScreen = me.ScreenObject.extend({
         this.bird = null;
         this.ground1 = null;
         this.ground2 = null;
+        if (this.pauseHandler) { me.event.unsubscribe(this.pauseHandler); this.pauseHandler = null; }
         me.input.unbindKey(me.input.KEY.SPACE);
+        me.input.unbindKey(me.input.KEY.UP);
+        me.input.unbindKey(me.input.KEY.W);
+        me.input.unbindKey(me.input.KEY.P);
+        me.input.unbindKey(me.input.KEY.ESC);
         me.input.unbindPointer(me.input.pointer.LEFT);
+        me.input.unbindPointer(me.input.pointer.RIGHT);
+        // [Manutencao - Gabriel de Oliveira] CR#4 Garante que a pausa nao vaze para a proxima tela
+        game.data.paused = false;
+        if (me.state.resume) { me.state.resume(); }
     }
 });

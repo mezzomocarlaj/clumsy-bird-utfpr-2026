@@ -1,20 +1,51 @@
-#eclipse files
+# --- IDE / Editor ---
+# Eclipse
 .project
-.settings
+.settings/
+# JetBrains
+.idea/
+*.iml
+# VS Code
+.vscode/
+# Sublime
+*.sublime-project
+*.sublime-workspace
+clumsy-bird.sublime-workspace
+# Vim swap files
+*.sw*
+# Backup files
+*.bak
+*.orig
+*.tmp
 
-# temp files
+# --- OS junk ---
 .DS_Store
 Thumbs.db
 Desktop.ini
-npm-debug.log
+ehthumbs.db
+$RECYCLE.BIN/
 
-# project specific ignore
+# --- Logs / debug ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+.npm
+.eslintcache
+
+# --- Dependencies / build artifacts ---
 node_modules/
+bower_components/
+.cache/
+dist/
+coverage/
+.nyc_output/
 
-# Vim swap files
-*.sw*
+# --- Local environment / secrets ---
+.env
+.env.local
+.env.*.local
 
-*.sublime-project
-
-clumsy-bird.sublime-workspace
-bower_components
+# --- Project specific ---
+# Heavy or non-source author working copies
+docs/Backup/

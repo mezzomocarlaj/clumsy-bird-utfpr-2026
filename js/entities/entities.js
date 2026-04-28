@@ -1,7 +1,8 @@
 game.BirdEntity = me.Entity.extend({
     init: function(x, y) {
         var settings = {};
-        settings.image = 'clumsy';
+        // [Manutencao - Gabriel de Oliveira] CR#5 Usa a skin ativa em game.data.skin
+        settings.image = (game.data && game.data.skin) ? game.data.skin : 'clumsy';
         settings.width = 85;
         settings.height = 60;
 
@@ -13,9 +14,9 @@ game.BirdEntity = me.Entity.extend({
         this.renderable.addAnimation("flying", [0, 1, 2]);
         this.renderable.addAnimation("idle", [0]);
         this.renderable.setCurrentAnimation("flying");
-        //this.renderable.anchorPoint = new me.Vector2d(0.1, 0.5);
         this.body.removeShapeAt(0);
-        this.body.addShape(new me.Ellipse(5, 5, 71, 51));
+        // [Manutencao - Leonardo Santos] CR#10 Hitbox mais permissiva: 60x40 centrada no sprite (antes 71x51)
+        this.body.addShape(new me.Ellipse(12, 10, 60, 40));
 
         // a tween object for the flying physic effect
         this.flyTween = new me.Tween(this.pos);
@@ -37,6 +38,10 @@ game.BirdEntity = me.Entity.extend({
     update: function(dt) {
         var that = this;
         this.pos.x = 60;
+        // [Manutencao - Gabriel de Oliveira] CR#4 Congela atualizacao durante pausa
+        if (game.data.paused) {
+            return this._super(me.Entity, 'update', [dt]);
+        }
         if (!game.data.start) {
             return this._super(me.Entity, 'update', [dt]);
         }
@@ -96,6 +101,8 @@ game.BirdEntity = me.Entity.extend({
     },
 
     endAnimation: function() {
+        // [Manutencao - Gabriel Guarnieri] CR#9 Screen shake 500ms na colisao
+        me.game.viewport.shake(8, 500, me.game.viewport.AXIS.BOTH);
         me.game.viewport.fadeOut("#fff", 100);
         var currentPos = this.pos.y;
         this.endTween = new me.Tween(this.pos);
@@ -131,10 +138,17 @@ game.PipeEntity = me.Entity.extend({
         this.body.gravity = 0;
         this.body.vel.set(-5, 0);
         this.type = 'pipe';
+        // [Manutencao - Leonardo Santos] CR#10 Hitbox do cano reduzida em 10px de cada lado
+        this.body.removeShapeAt(0);
+        this.body.addShape(new me.Rect(10, 0, settings.width - 20, settings.height));
     },
 
     update: function(dt) {
         // mechanics
+        // [Manutencao - Gabriel de Oliveira] CR#4 Congela canos durante pausa
+        if (game.data.paused) {
+            return this._super(me.Entity, 'update', [dt]);
+        }
         if (!game.data.start) {
             return this._super(me.Entity, 'update', [dt]);
         }
@@ -160,6 +174,10 @@ game.PipeGenerator = me.Renderable.extend({
     },
 
     update: function(dt) {
+        // [Manutencao - Gabriel de Oliveira] CR#4 Nao gera canos durante pausa
+        if (game.data.paused) {
+            return this._super(me.Entity, "update", [dt]);
+        }
         if (this.generate++ % this.pipeFrequency == 0) {
             var posY = Number.prototype.random(
                     me.video.renderer.getHeight() - 100,
@@ -196,12 +214,17 @@ game.HitEntity = me.Entity.extend({
         this.renderable.alpha = 0;
         this.body.accel.set(-5, 0);
         this.body.removeShapeAt(0);
+        // [Manutencao - Leonardo Santos] CR#10 Hitbox de pontuacao com folga maior (permite passar mais cedo)
         this.body.addShape(new me.Rect(0, 0, settings.width - 30, settings.height - 30));
         this.type = 'hit';
     },
 
     update: function(dt) {
         // mechanics
+        // [Manutencao - Gabriel de Oliveira] CR#4 Congela hitboxes de pontuacao durante pausa
+        if (game.data.paused) {
+            return this._super(me.Entity, "update", [dt]);
+        }
         this.pos.add(this.body.accel);
         if (this.pos.x < -this.image.width) {
             me.game.world.removeChild(this);
@@ -228,6 +251,10 @@ game.Ground = me.Entity.extend({
 
     update: function(dt) {
         // mechanics
+        // [Manutencao - Gabriel de Oliveira] CR#4 Congela chao durante pausa
+        if (game.data.paused) {
+            return this._super(me.Entity, 'update', [dt]);
+        }
         this.pos.add(this.body.vel);
         if (this.pos.x < -this.renderable.width) {
             this.pos.x = me.video.renderer.getWidth() - 10;
