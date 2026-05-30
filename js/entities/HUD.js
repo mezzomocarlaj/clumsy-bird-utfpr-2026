@@ -3,11 +3,19 @@ game.HUD = game.HUD || {};
 game.HUD.Container = me.Container.extend({
     init: function() {
         this._super(me.Container, 'init');
+        // persistent across level change
         this.isPersistent = true;
+
+        // non collidable
         this.collidable = false;
+
+        // make sure our object is always draw first
         this.z = Infinity;
+
+        // give a name
         this.name = "HUD";
 
+        // add our child score object at the top left corner
         this.addChild(new game.HUD.ScoreItem(5, 5));
         // [Manutencao - Carla Mezzomo] CR#2 Botao clicavel de mute/unmute no canto superior direito
         this.addChild(new game.HUD.MuteButton(me.game.viewport.width - 60, 20));
@@ -22,6 +30,8 @@ game.HUD.Container = me.Container.extend({
 game.HUD.ScoreItem = me.Renderable.extend({
     init: function(x, y) {
         this._super(me.Renderable, "init", [x, y, 10, 10]);
+
+        // local copy of the global score
         this.stepsFont = new me.Font('gamefont', 80, '#000', 'center');
 
         // [Manutencao - Gabriel Guarnieri] CR#8 Estado para pulso de escala no score
@@ -78,14 +88,7 @@ game.HUD.MuteButton = me.Renderable.extend({
             var py = (event && (event.gameY !== undefined ? event.gameY : event.clientY)) || 0;
             if (that.containsPoint(px, py)) {
                 game.data.muted = !game.data.muted;
-                if (game.data.muted) {
-                    me.audio.disable();
-                } else {
-                    me.audio.enable();
-                    // [SC2 - Carla] Restart theme after unmute
-                    me.audio.stop("theme");
-                    me.audio.play("theme", true);
-                }
+                if (game.data.muted) { me.audio.disable(); } else { me.audio.enable(); }
                 if (event && typeof event.stopPropagation === 'function') { event.stopPropagation(); }
             }
         };
@@ -183,6 +186,7 @@ var BackgroundLayer = me.ImageLayer.extend({
         settings.image = image;
         settings.z = z;
         settings.ratio = 1;
+        // call parent constructor
         this._super(me.ImageLayer, 'init', [0, 0, settings]);
     },
 
@@ -193,9 +197,6 @@ var BackgroundLayer = me.ImageLayer.extend({
                 me.audio.disable();
             }else{
                 me.audio.enable();
-                // [SC2 - Carla] Restart theme audio on unmute
-                me.audio.stop("theme");
-                me.audio.play("theme", true);
             }
         }
         return true;
