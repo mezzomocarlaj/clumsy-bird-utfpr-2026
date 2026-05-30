@@ -57,6 +57,24 @@ game.TitleScreen = me.ScreenObject.extend({
                 this.font.draw(renderer, this.text, xpos, ypos);
             }
         })), 12);
+
+        // [SC1 - Carla] Exibe o High Score salvo no menu inicial
+        me.game.world.addChild(new (me.Renderable.extend({
+            init: function() {
+                this._super(me.Renderable, 'init', [0, 0, 100, 100]);
+                this.font = new me.Font('gamefont', 26, '#000', 'center');
+                this.floating = true;
+            },
+            draw: function(renderer) {
+                var hiScore = me.save.topSteps ? me.save.topSteps : 0;
+                this.font.draw(
+                    renderer,
+                    'BEST: ' + hiScore,
+                    me.game.viewport.width / 2,
+                    me.game.viewport.height / 2 + 115
+                );
+            }
+        })), 12);
     },
 
     onDestroyEvent: function() {

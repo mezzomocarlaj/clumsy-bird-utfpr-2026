@@ -5,6 +5,19 @@ game.GameOverScreen = me.ScreenObject.extend({
     },
 
     onResetEvent: function() {
+        // [SC1 - Carla] Garante que topSteps existe antes de comparar
+        if (!me.save.topSteps) {
+            me.save.add({ topSteps: 0 });
+        }
+
+        // [SC1 - Carla] Salva novo high score se a pontuação atual for maior
+        if (game.data.steps > me.save.topSteps) {
+            me.save.topSteps = game.data.steps;
+            game.data.newHiScore = true;
+        } else {
+            game.data.newHiScore = false;
+        }
+
         //save section
         this.savedData = {
             score: game.data.score,
@@ -12,13 +25,8 @@ game.GameOverScreen = me.ScreenObject.extend({
         };
         me.save.add(this.savedData);
 
-        if (!me.save.topSteps) me.save.add({topSteps: game.data.steps});
-        if (game.data.steps > me.save.topSteps) {
-            me.save.topSteps = game.data.steps;
-            game.data.newHiScore = true;
-        }
         me.input.bindKey(me.input.KEY.ENTER, "enter", true);
-        me.input.bindKey(me.input.KEY.SPACE, "enter", false)
+        me.input.bindKey(me.input.KEY.SPACE, "enter", false);
         me.input.bindPointer(me.input.pointer.LEFT, me.input.KEY.ENTER);
 
         this.handler = me.event.subscribe(me.event.KEYDOWN,
@@ -50,7 +58,7 @@ game.GameOverScreen = me.ScreenObject.extend({
         me.game.world.addChild(this.ground1, 11);
         me.game.world.addChild(this.ground2, 11);
 
-        // add the dialog witht he game information
+        // add the dialog with the game information
         if (game.data.newHiScore) {
             var newRect = new me.Sprite(
                 gameOverBG.width/2,
@@ -68,13 +76,12 @@ game.GameOverScreen = me.ScreenObject.extend({
                 );
                 this.font = new me.Font('gamefont', 40, 'black', 'left');
                 this.steps = 'Steps: ' + game.data.steps.toString();
-                this.topSteps= 'Higher Step: ' + me.save.topSteps.toString();
+                // [SC1 - Carla] Exibe o high score persistido no localStorage
+                this.topSteps = 'Best: ' + me.save.topSteps.toString();
             },
 
             draw: function (renderer) {
                 var stepsText = this.font.measureText(renderer, this.steps);
-                var topStepsText = this.font.measureText(renderer, this.topSteps);
-                var scoreText = this.font.measureText(renderer, this.score);
 
                 //steps
                 this.font.draw(

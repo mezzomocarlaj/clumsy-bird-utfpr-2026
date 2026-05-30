@@ -43,6 +43,11 @@ var game = {
     },
 
     "loaded": function() {
+        // [SC1 - Carla] Inicializa o high score no localStorage se ainda não existir
+        if (!me.save.topSteps) {
+            me.save.add({ topSteps: 0 });
+        }
+
         me.state.set(me.state.MENU, new game.TitleScreen());
         me.state.set(me.state.PLAY, new game.PlayScreen());
         me.state.set(me.state.GAME_OVER, new game.GameOverScreen());
