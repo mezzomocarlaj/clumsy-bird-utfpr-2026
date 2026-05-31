@@ -49,3 +49,10 @@ coverage/
 # --- Project specific ---
 # Heavy or non-source author working copies
 docs/Backup/
+
+# --- Reports and Doc Generation ---
+plato-report/
+relatorio/
+report_clean/
+relatorio_final.docx
+generate_doc.js

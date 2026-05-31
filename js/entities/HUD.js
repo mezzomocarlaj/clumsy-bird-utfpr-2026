@@ -87,11 +87,18 @@ game.HUD.MuteButton = me.Renderable.extend({
             var px = (event && (event.gameX !== undefined ? event.gameX : event.clientX)) || 0;
             var py = (event && (event.gameY !== undefined ? event.gameY : event.clientY)) || 0;
             if (that.containsPoint(px, py)) {
-                game.data.muted = !game.data.muted;
-                if (game.data.muted) { me.audio.disable(); } else { me.audio.enable(); }
+                that.toggleMute();
                 if (event && typeof event.stopPropagation === 'function') { event.stopPropagation(); }
             }
         };
+    },
+
+    onActivateEvent: function () {
+        me.input.registerPointerEvent('pointerdown', this, this.pointerHandler);
+    },
+
+    onDeactivateEvent: function () {
+        me.input.releasePointerEvent('pointerdown', this);
     },
 
     containsPoint: function (x, y) {
@@ -99,10 +106,13 @@ game.HUD.MuteButton = me.Renderable.extend({
                y >= this.pos.y && y <= this.pos.y + this.height;
     },
 
-    // Invocado pela tela de Play via me.input.registerPointerEvent
+    toggleMute: function () {
+        game.toggleMute();
+    },
+
+    // Invocado por testes unitários e retrocompatibilidade
     onClick: function () {
-        game.data.muted = !game.data.muted;
-        if (game.data.muted) { me.audio.disable(); } else { me.audio.enable(); }
+        this.toggleMute();
         return true;
     },
 
@@ -192,13 +202,56 @@ var BackgroundLayer = me.ImageLayer.extend({
 
     update: function() {
         if (me.input.isKeyPressed('mute')) {
-            game.data.muted = !game.data.muted;
-            if (game.data.muted){
-                me.audio.disable();
-            }else{
-                me.audio.enable();
-            }
+            game.toggleMute();
         }
         return true;
+    },
+
+    updateLayer: function(a) {
+        // no-op to prevent NaN errors when viewport shakes
+    }
+});
+
+// [Refatoracao - Gabriel de Oliveira] R2: Classes de UI extraidas de title.js
+game.HUD.TitleText = me.Renderable.extend({
+    init: function() {
+        this._super(me.Renderable, 'init', [0, 0, 100, 100]);
+        this.text = me.device.touch ? 'Tap to start' : 'PRESS SPACE OR CLICK LEFT MOUSE BUTTON TO START \n\t\t\t\t\t\t\t\t\t\t\tPRESS "M" TO MUTE SOUND';
+        this.font = new me.Font('gamefont', 20, '#000');
+        this.name = 'title-text';
+    },
+    draw: function (renderer) {
+        var measure = this.font.measureText(renderer, this.text);
+        var xpos = me.game.viewport.width/2 - measure.width/2;
+        var ypos = me.game.viewport.height/2 + 50;
+        this.font.draw(renderer, this.text, xpos, ypos);
+    }
+});
+
+game.HUD.HiScoreLabel = me.Renderable.extend({
+    init: function () {
+        this._super(me.Renderable, 'init', [0, 0, 200, 40]);
+        this.font = new me.Font('gamefont', 28, '#fff');
+        this.name = 'hiscore-label';
+    },
+    draw: function (renderer) {
+        var top = (typeof me.save.topSteps === 'number') ? me.save.topSteps : 0;
+        var text = 'HIGH SCORE: ' + top;
+        var measure = this.font.measureText(renderer, text);
+        this.font.draw(renderer, text, me.game.viewport.width/2 - measure.width/2, 30);
+    }
+});
+
+game.HUD.SkinLabel = me.Renderable.extend({
+    init: function () {
+        this._super(me.Renderable, 'init', [0, 0, 200, 40]);
+        this.font = new me.Font('gamefont', 18, '#fff');
+        this.name = 'skin-label';
+    },
+    draw: function (renderer) {
+        var text = 'SKIN: ' + (game.data.skin || 'clumsy') + '  (PRESS S TO CHANGE)';
+        var measure = this.font.measureText(renderer, text);
+        this.font.draw(renderer, text, me.game.viewport.width/2 - measure.width/2,
+            me.game.viewport.height - 140);
     }
 });

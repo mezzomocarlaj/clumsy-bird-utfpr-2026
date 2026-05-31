@@ -5,20 +5,10 @@ game.GameOverScreen = me.ScreenObject.extend({
     },
 
     onResetEvent: function() {
-        //save section
-        this.savedData = {
-            score: game.data.score,
-            steps: game.data.steps
-        };
-        me.save.add(this.savedData);
-
-        if (!me.save.topSteps) me.save.add({topSteps: game.data.steps});
-        if (game.data.steps > me.save.topSteps) {
-            me.save.topSteps = game.data.steps;
-            game.data.newHiScore = true;
-        }
+        // [Refatoracao - Gabriel de Oliveira] R1: Move Method - delega a persistência de recorde para o game
+        game.updateHighScore(game.data.steps);
         me.input.bindKey(me.input.KEY.ENTER, "enter", true);
-        me.input.bindKey(me.input.KEY.SPACE, "enter", false)
+        me.input.bindKey(me.input.KEY.SPACE, "enter", false);
         me.input.bindPointer(me.input.pointer.LEFT, me.input.KEY.ENTER);
 
         this.handler = me.event.subscribe(me.event.KEYDOWN,
@@ -68,13 +58,12 @@ game.GameOverScreen = me.ScreenObject.extend({
                 );
                 this.font = new me.Font('gamefont', 40, 'black', 'left');
                 this.steps = 'Steps: ' + game.data.steps.toString();
-                this.topSteps= 'Higher Step: ' + me.save.topSteps.toString();
+                var top = me.save.topSteps || 0;
+                this.topSteps= 'Higher Step: ' + top.toString();
             },
 
             draw: function (renderer) {
                 var stepsText = this.font.measureText(renderer, this.steps);
-                var topStepsText = this.font.measureText(renderer, this.topSteps);
-                var scoreText = this.font.measureText(renderer, this.score);
 
                 //steps
                 this.font.draw(
@@ -92,7 +81,7 @@ game.GameOverScreen = me.ScreenObject.extend({
                     me.game.viewport.height/2 + 50
                 );
             }
-        }));
+        }))();
         me.game.world.addChild(this.dialog, 12);
     },
 
@@ -105,6 +94,6 @@ game.GameOverScreen = me.ScreenObject.extend({
         this.ground1 = null;
         this.ground2 = null;
         this.font = null;
-        me.audio.stop("theme");
+        me.audio.stopTrack();
     }
 });

@@ -41,6 +41,7 @@ var game = {
     ],
 
     "onload": function() {
+        me.state.GAME_OVER = me.state.GAMEOVER || 2;
         if (!me.video.init(900, 600, {
             wrapper: "screen",
             scale : "auto",
@@ -137,5 +138,33 @@ var game = {
         var next = game.skins[(idx + 1) % game.skins.length];
         game.selectSkin(next);
         return next;
+    },
+
+    // [Refatoracao - Gabriel de Oliveira] R1: Move Method para centralizar persistência de score e recorde
+    updateHighScore: function (steps) {
+        var scoreData = {
+            score: game.data.score,
+            steps: steps
+        };
+        me.save.add(scoreData);
+
+        if (typeof me.save.topSteps === 'undefined') {
+            me.save.add({ topSteps: 0 });
+        }
+        if (steps > me.save.topSteps) {
+            me.save.topSteps = steps;
+            game.data.newHiScore = true;
+        }
+    },
+
+    // [Refatoracao - Gabriel de Oliveira] Centraliza lógica de mute/unmute para teclado e clique
+    toggleMute: function () {
+        game.data.muted = !game.data.muted;
+        if (game.data.muted) {
+            me.audio.disable();
+        } else {
+            me.audio.enable();
+        }
+        return game.data.muted;
     }
 };

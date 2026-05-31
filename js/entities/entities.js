@@ -36,7 +36,6 @@ game.BirdEntity = me.Entity.extend({
     },
 
     update: function(dt) {
-        var that = this;
         this.pos.x = 60;
         // [Manutencao - Gabriel de Oliveira] CR#4 Congela atualizacao durante pausa
         if (game.data.paused) {
@@ -46,32 +45,14 @@ game.BirdEntity = me.Entity.extend({
             return this._super(me.Entity, 'update', [dt]);
         }
         this.renderable.currentTransform.identity();
+        
+        // [Refatoracao - Gabriel de Oliveira] R3: Decompose Conditional
         if (me.input.isKeyPressed('fly')) {
-            me.audio.play('wing');
-            this.gravityForce = 0.2;
-            var currentPos = this.pos.y;
-
-            this.angleTween.stop();
-            this.flyTween.stop();
-
-
-            this.flyTween.to({y: currentPos - 72}, 50);
-            this.flyTween.start();
-
-            this.angleTween.to({currentAngle: that.maxAngleRotation}, 50).onComplete(function(angle) {
-                that.renderable.currentTransform.rotate(that.maxAngleRotation);
-            })
-            this.angleTween.start();
-
+            this.jump();
         } else {
-            this.gravityForce += 0.2;
-            this.pos.y += me.timer.tick * this.gravityForce;
-            this.currentAngle += Number.prototype.degToRad(3);
-            if (this.currentAngle >= this.maxAngleRotationDown) {
-                this.renderable.currentTransform.identity();
-                this.currentAngle = this.maxAngleRotationDown;
-            }
+            this.fall();
         }
+        
         this.renderable.currentTransform.rotate(this.currentAngle);
         me.Rect.prototype.updateBounds.apply(this);
 
@@ -84,6 +65,36 @@ game.BirdEntity = me.Entity.extend({
         }
         me.collision.check(this);
         return true;
+    },
+
+    // [Refatoracao - Gabriel de Oliveira] R3: Método extraído para ação de pulo
+    jump: function () {
+        var that = this;
+        me.audio.play('wing');
+        this.gravityForce = 0.2;
+        var currentPos = this.pos.y;
+
+        this.angleTween.stop();
+        this.flyTween.stop();
+
+        this.flyTween.to({y: currentPos - 72}, 50);
+        this.flyTween.start();
+
+        this.angleTween.to({currentAngle: that.maxAngleRotation}, 50).onComplete(function(angle) {
+            that.renderable.currentTransform.rotate(that.maxAngleRotation);
+        });
+        this.angleTween.start();
+    },
+
+    // [Refatoracao - Gabriel de Oliveira] R3: Método extraído para ação de queda (gravidade)
+    fall: function () {
+        this.gravityForce += 0.2;
+        this.pos.y += me.timer.tick * this.gravityForce;
+        this.currentAngle += Number.prototype.degToRad(3);
+        if (this.currentAngle >= this.maxAngleRotationDown) {
+            this.renderable.currentTransform.identity();
+            this.currentAngle = this.maxAngleRotationDown;
+        }
     },
 
     onCollision: function(response) {

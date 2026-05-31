@@ -285,12 +285,33 @@ function buildMelon() {
         },
         audio: {
             _playing: {},
+            _currentTrack: null,
             _disabled: false,
             _volume: 1,
             init: function () {},
             play: function (track) { me.audio._playing[track] = true; },
             stop: function (track) { if (track) { me.audio._playing[track] = false; } },
-            stopTrack: function (track) { me.audio._playing[track] = false; },
+            playTrack: function (track) {
+                me.audio._currentTrack = track;
+                me.audio._playing[track] = true;
+            },
+            stopTrack: function () {
+                if (me.audio._currentTrack) {
+                    me.audio._playing[me.audio._currentTrack] = false;
+                    me.audio._currentTrack = null;
+                }
+            },
+            pauseTrack: function () {
+                if (me.audio._currentTrack) {
+                    me.audio._playing[me.audio._currentTrack] = 'paused';
+                }
+            },
+            resumeTrack: function () {
+                if (me.audio._currentTrack) {
+                    me.audio._playing[me.audio._currentTrack] = true;
+                }
+            },
+            getCurrentTrack: function () { return me.audio._currentTrack; },
             disable: function () { me.audio._disabled = true; },
             enable: function () { me.audio._disabled = false; },
             muteAll: function () { me.audio._disabled = true; },

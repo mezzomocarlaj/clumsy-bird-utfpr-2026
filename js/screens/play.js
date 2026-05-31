@@ -1,18 +1,20 @@
 game.PlayScreen = me.ScreenObject.extend({
     init: function() {
-        me.audio.play("theme", true);
-        // lower audio volume on firefox browser
-        var vol = me.device.ua.indexOf("Firefox") !== -1 ? 0.3 : 0.5;
-        me.audio.setVolume(vol);
+        // [Refatoracao - Gabriel de Oliveira] R4: Replace Temp with Query
+        me.audio.setVolume(this.getInitialVolume());
         this._super(me.ScreenObject, 'init');
+    },
+
+    // [Refatoracao - Gabriel de Oliveira] R4: Método de consulta para o volume padrão
+    getInitialVolume: function() {
+        // lower audio volume on firefox browser
+        return me.device.ua.indexOf("Firefox") !== -1 ? 0.3 : 0.5;
     },
 
     onResetEvent: function() {
         me.game.reset();
-        me.audio.stop("theme");
-        if (!game.data.muted){
-            me.audio.play("theme", true);
-        }
+        me.audio.stopTrack();
+        me.audio.playTrack("theme");
 
         me.input.bindKey(me.input.KEY.SPACE, "fly", true);
         // [Manutencao - Leonardo Santos] CR#12 Seta para cima e W tambem disparam "fly"
@@ -80,17 +82,17 @@ game.PlayScreen = me.ScreenObject.extend({
         if (game.data.paused) {
             game.data.paused = false;
             if (me.state.resume) { me.state.resume(); }
-            if (!game.data.muted) { me.audio.play('theme', true); }
+            me.audio.resumeTrack();
         } else {
             game.data.paused = true;
             if (me.state.pause) { me.state.pause(); }
-            me.audio.stop('theme');
+            me.audio.pauseTrack();
         }
         return game.data.paused;
     },
 
     onDestroyEvent: function() {
-        me.audio.stopTrack('theme');
+        me.audio.stopTrack();
         // free the stored instance
         this.HUD = null;
         this.bird = null;
