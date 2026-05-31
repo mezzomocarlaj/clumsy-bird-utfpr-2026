@@ -64,6 +64,7 @@ game.BirdEntity = me.Entity.extend({
             return false;
         }
         me.collision.check(this);
+        this._super(me.Entity, 'update', [dt]);
         return true;
     },
 
