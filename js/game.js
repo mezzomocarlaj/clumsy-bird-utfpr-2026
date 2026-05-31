@@ -20,8 +20,8 @@ var game = {
             // images
         {name: "bg", type:"image", src: "data/img/bg.png"},
         {name: "clumsy", type:"image", src: "data/img/clumsy.png"},
-        {name: "clumsy_blue", type:"image", src: "data/img/clumsy.png"},
-        {name: "clumsy_red", type:"image", src: "data/img/clumsy.png"},
+        {name: "clumsy_blue", type:"image", src: "data/img/clumsy_blue.png"},
+        {name: "clumsy_red", type:"image", src: "data/img/clumsy_red.png"},
         {name: "pipe", type:"image", src: "data/img/pipe.png"},
         {name: "logo", type:"image", src: "data/img/logo.png"},
         {name: "ground", type:"image", src: "data/img/ground.png"},
