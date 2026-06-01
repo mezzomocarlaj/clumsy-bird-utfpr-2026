@@ -1,4 +1,4 @@
-// [Refatoracao - Gabriel Felipe Guarnieri] E6-Numeros-Magicos: Replace Magic Number with Symbolic Constant
+// [Refatoracao - Gabriel Felipe Guarnieri] E7-Numeros-Magicos: Replace Magic Number with Symbolic Constant
 // Literais de fisica/hitbox antes espalhados pelo arquivo, agora nomeados num unico lugar.
 var GRAVITY = 0.2;            // aceleracao da gravidade por tick (antes 0.2 em 4 pontos)
 var JUMP_IMPULSE = 72;       // deslocamento vertical do pulo, em px (antes "currentPos - 72")
@@ -7,13 +7,13 @@ var BIRD_HITBOX = { x: 12, y: 10, width: 60, height: 40 }; // CR#10 hitbox permi
 var PIPE_BODY_HEIGHT = 1664; // altura do sprite/corpo do cano (antes 1664 em 2 pontos)
 var PIPE_GAP = 1240;         // tamanho do vao entre os canos (antes pipeHoleSize = 1240)
 
-// [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: Extract Method
+// [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: Extract Method
 // Centraliza a regra de pausa antes copiada em 5 metodos update() (CR#4 - Gabriel de Oliveira).
 game.isFrozen = function () {
     return !!(game.data && game.data.paused);
 };
 
-// [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: Form Template Method / Pull Up Method
+// [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: Form Template Method / Pull Up Method
 // Bases que tratam o congelamento (pausa) de forma unica: update() aplica o guard
 // e delega a logica ativa de cada entidade para updateActive(dt). Sem essa base, o
 // mesmo "if (game.data.paused) return this._super(...)" estava duplicado em cada update().
@@ -79,7 +79,7 @@ game.BirdEntity = game.FreezableEntity.extend({
         this.gravityForce = GRAVITY;
     },
 
-    // [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: guard de pausa movido para o Template Method (game.FreezableEntity.update)
+    // [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: guard de pausa movido para o Template Method (game.FreezableEntity.update)
     updateActive: function(dt) {
         this.pos.x = 60;
         if (!game.data.start) {
@@ -196,7 +196,7 @@ game.PipeEntity = game.FreezableEntity.extend({
         this.body.addShape(new me.Rect(10, 0, settings.width - 20, settings.height));
     },
 
-    // [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: guard de pausa movido para o Template Method
+    // [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: guard de pausa movido para o Template Method
     updateActive: function(dt) {
         // mechanics
         if (!game.data.start) {
@@ -223,11 +223,11 @@ game.PipeGenerator = game.FreezableRenderable.extend({
         this.posX = game.viewportWidth();
     },
 
-    // [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: guard de pausa movido para o Template Method;
+    // [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: guard de pausa movido para o Template Method;
     // corrige tambem a inconsistencia que passava me.Entity numa classe que estende me.Renderable.
     updateActive: function(dt) {
         if (this.generate++ % this.pipeFrequency == 0) {
-            // [Refatoracao - Gabriel Felipe Guarnieri] E6-Extract-Variable: Extract Variable
+            // [Refatoracao - Gabriel Felipe Guarnieri] E7-Extract-Variable: Extract Variable
             // A altura da tela era consultada duas vezes (topo e base do vao). Nomear o
             // valor numa variavel local explicita o calculo do par de canos e evita
             // recalcular o mesmo getter no meio da expressao.
@@ -272,7 +272,7 @@ game.HitEntity = game.FreezableEntity.extend({
         this.type = 'hit';
     },
 
-    // [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: guard de pausa movido para o Template Method
+    // [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: guard de pausa movido para o Template Method
     updateActive: function(dt) {
         // mechanics
         this.pos.add(this.body.accel);
@@ -299,7 +299,7 @@ game.Ground = game.FreezableEntity.extend({
         this.type = 'ground';
     },
 
-    // [Refatoracao - Gabriel Felipe Guarnieri] E6-Codigo-Duplicado: guard de pausa movido para o Template Method
+    // [Refatoracao - Gabriel Felipe Guarnieri] E7-Codigo-Duplicado: guard de pausa movido para o Template Method
     updateActive: function(dt) {
         // mechanics
         this.pos.add(this.body.vel);

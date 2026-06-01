@@ -1,11 +1,11 @@
-# Entrega 6 — Refatorações (Roteiro de Vídeo)
+# Entrega 7 — Refatorações (Roteiro de Vídeo)
 **Integrante:** Gabriel Felipe Guarnieri
 **Projeto:** clumsy-bird-utfpr-2026 (fork do Clumsy Bird / melonJS)
 **Arquivo principal:** `js/entities/entities.js`
 
 > Quatro refatorações distintas, todas preservando comportamento (refactorings, não
 > features). Nenhuma delas é "Rename". Suíte completa: **92 testes verdes**
-> (`node --test "test/*.test.js"`), incluindo `test/e6-guarnieri.test.js`.
+> (`node --test "test/*.test.js"`), incluindo `test/e7-guarnieri.test.js`.
 
 ---
 
@@ -194,7 +194,7 @@ opcionalmente rodar os testes de novo (`# pass 92`).
 
 ---
 
-### Cobertura de testes (`test/e6-guarnieri.test.js`)
+### Cobertura de testes (`test/e7-guarnieri.test.js`)
 - **A — Extract Method:** `isFrozen` segue `game.data.paused`.
 - **B — Template/Pull Up:** bases `Freezable` existem; pausado, `updateActive` não roda
   (pássaro, cano, hitbox e chão não se movem); despausado, voltam a se mover.

@@ -1,6 +1,6 @@
 'use strict';
 
-// Entrega 6 — Gabriel Felipe Guarnieri
+// Entrega 7 — Gabriel Felipe Guarnieri
 // Trava o comportamento das quatro refatoracoes:
 //   (A) Codigo Duplicado -> Extract Method (game.isFrozen).
 //   (B) Codigo Duplicado -> Form Template Method / Pull Up Method
@@ -25,7 +25,7 @@ function playingContext() {
 // (A) Codigo Duplicado: Extract Method + Template Method
 // ---------------------------------------------------------------------------
 
-test('E6-A: game.isFrozen reflete game.data.paused', function () {
+test('E7-A: game.isFrozen reflete game.data.paused', function () {
     var ctx = loader.freshProject();
     ctx.game.data.paused = false;
     assert.strictEqual(ctx.game.isFrozen(), false);
@@ -33,7 +33,7 @@ test('E6-A: game.isFrozen reflete game.data.paused', function () {
     assert.strictEqual(ctx.game.isFrozen(), true);
 });
 
-test('E6-A: bases Freezable existem e as entidades sao reconstruidas sobre elas', function () {
+test('E7-A: bases Freezable existem e as entidades sao reconstruidas sobre elas', function () {
     var ctx = loader.freshProject();
     assert.strictEqual(typeof ctx.game.FreezableEntity, 'function');
     assert.strictEqual(typeof ctx.game.FreezableRenderable, 'function');
@@ -45,7 +45,7 @@ test('E6-A: bases Freezable existem e as entidades sao reconstruidas sobre elas'
     assert.strictEqual(typeof gen.updateActive, 'function');
 });
 
-test('E6-A: update() congelado NAO executa updateActive (passaro)', function () {
+test('E7-A: update() congelado NAO executa updateActive (passaro)', function () {
     var ctx = playingContext();
     var bird = ctx.me.pool.pull('clumsy', 999, 300); // pos.x proposital != 60
     ctx.game.data.paused = true;
@@ -54,7 +54,7 @@ test('E6-A: update() congelado NAO executa updateActive (passaro)', function () 
     assert.strictEqual(bird.pos.x, 999, 'congelado: updateActive nao roda');
 });
 
-test('E6-A: update() ativo delega para updateActive (passaro)', function () {
+test('E7-A: update() ativo delega para updateActive (passaro)', function () {
     var ctx = playingContext();
     var bird = ctx.me.pool.pull('clumsy', 999, 300);
     ctx.game.data.paused = false;
@@ -63,7 +63,7 @@ test('E6-A: update() ativo delega para updateActive (passaro)', function () {
     assert.strictEqual(bird.pos.x, 60, 'ativo: updateActive rodou e fixou pos.x');
 });
 
-test('E6-A: PipeEntity, HitEntity e Ground congelam quando pausado', function () {
+test('E7-A: PipeEntity, HitEntity e Ground congelam quando pausado', function () {
     var ctx = playingContext();
     var pipe = ctx.me.pool.pull('pipe', 500, 100);
     var hit = ctx.me.pool.pull('hit', 500, 100);
@@ -76,7 +76,7 @@ test('E6-A: PipeEntity, HitEntity e Ground congelam quando pausado', function ()
     assert.strictEqual(ground.pos.x, gx, 'chao nao se move pausado');
 });
 
-test('E6-A: entidades ativas voltam a se mover quando despausadas', function () {
+test('E7-A: entidades ativas voltam a se mover quando despausadas', function () {
     var ctx = playingContext();
     var pipe = ctx.me.pool.pull('pipe', 500, 100);
     ctx.game.data.paused = false;
@@ -88,7 +88,7 @@ test('E6-A: entidades ativas voltam a se mover quando despausadas', function () 
 // (B) Numeros Magicos: Replace Magic Number with Symbolic Constant
 // ---------------------------------------------------------------------------
 
-test('E6-B: hitbox do passaro mantem 12,10,60,40 via constante', function () {
+test('E7-B: hitbox do passaro mantem 12,10,60,40 via constante', function () {
     var ctx = playingContext();
     var bird = ctx.me.pool.pull('clumsy', 60, 300);
     var shape = bird.body.shapes[0];
@@ -99,7 +99,7 @@ test('E6-B: hitbox do passaro mantem 12,10,60,40 via constante', function () {
     );
 });
 
-test('E6-B: impulso do pulo continua deslocando 72px para cima', function () {
+test('E7-B: impulso do pulo continua deslocando 72px para cima', function () {
     var ctx = playingContext();
     var bird = ctx.me.pool.pull('clumsy', 60, 300);
     var startY = bird.pos.y;
@@ -109,7 +109,7 @@ test('E6-B: impulso do pulo continua deslocando 72px para cima', function () {
     assert.strictEqual(bird.gravityForce, 0.2, 'pulo reseta gravidade para GRAVITY');
 });
 
-test('E6-B: gravidade acumula 0.2 por tick na queda', function () {
+test('E7-B: gravidade acumula 0.2 por tick na queda', function () {
     var ctx = playingContext();
     var bird = ctx.me.pool.pull('clumsy', 60, 300);
     bird.gravityForce = 0;
@@ -118,7 +118,7 @@ test('E6-B: gravidade acumula 0.2 por tick na queda', function () {
     assert.strictEqual(bird.body.gravity, 0.2, 'body.gravity usa GRAVITY');
 });
 
-test('E6-B: dimensoes do cano e tamanho do vao usam constantes', function () {
+test('E7-B: dimensoes do cano e tamanho do vao usam constantes', function () {
     var ctx = playingContext();
     var pipe = ctx.me.pool.pull('pipe', 500, 100);
     var gen = new ctx.game.PipeGenerator();
@@ -130,7 +130,7 @@ test('E6-B: dimensoes do cano e tamanho do vao usam constantes', function () {
 // (D) Extract Variable: screenHeight em PipeGenerator.updateActive
 // ---------------------------------------------------------------------------
 
-test('E6-D: Extract Variable preserva o vao vertical do par de canos', function () {
+test('E7-D: Extract Variable preserva o vao vertical do par de canos', function () {
     var ctx = playingContext();
     var gen = new ctx.game.PipeGenerator();
     var before = ctx.me.game.world._children.length;
