@@ -24,27 +24,22 @@ game.PlayScreen = me.ScreenObject.extend({
         me.input.bindKey(me.input.KEY.P, "pause", true);
         me.input.bindKey(me.input.KEY.ESC, "pause", true);
 
-        game.data.score = 0;
-        game.data.steps = 0;
-        game.data.start = false;
-        game.data.newHiScore = false;
-        // [Manutencao - Gabriel de Oliveira] CR#4 Reseta estado de pausa ao iniciar partida
-        game.data.paused = false;
-        // [Manutencao - Marcos Winicios] CR#15 Reinicia tema para "day" a cada partida
-        game.data.theme = 'day';
+        // [Refatoracao - Leonardo Santos] E7-Primitive-Obsession: reset da partida no GameState
+        // (zera score/steps/start/newHiScore/paused/theme; preserva muted e skin)
+        game.data.reset();
 
         me.game.world.addChild(new BackgroundLayer('bg', 1));
 
-        this.ground1 = me.pool.pull('ground', 0, me.game.viewport.height - 96);
-        this.ground2 = me.pool.pull('ground', me.game.viewport.width,
-            me.game.viewport.height - 96);
+        // [Refatoracao - Leonardo Santos] E7-Duplicacao: chao via fabrica game.createGround
+        this.ground1 = game.createGround(0);
+        this.ground2 = game.createGround(game.viewportWidth());
         me.game.world.addChild(this.ground1, 11);
         me.game.world.addChild(this.ground2, 11);
 
         this.HUD = new game.HUD.Container();
         me.game.world.addChild(this.HUD, 11);
 
-        this.bird = me.pool.pull("clumsy", 60, me.game.viewport.height/2 - 100);
+        this.bird = me.pool.pull("clumsy", 60, game.viewportHeight()/2 - 100);
         me.game.world.addChild(this.bird, 10);
 
         //inputs
@@ -61,14 +56,16 @@ game.PlayScreen = me.ScreenObject.extend({
         });
 
         this.getReady = new me.Sprite(
-            me.game.viewport.width/2,
-            me.game.viewport.height/2,
+            game.viewportWidth()/2,
+            game.viewportHeight()/2,
             {image: 'getready'}
         );
         me.game.world.addChild(this.getReady, 11);
 
         var that = this;
-        var fadeOut = new me.Tween(this.getReady).to({alpha: 0}, 2000)
+        // [Refatoracao - Marcos Winicios] E7-Codigo-Morto: Remove Dead Code
+        // o binding "fadeOut" nunca era lido; mantem-se apenas o efeito (.start()).
+        new me.Tween(this.getReady).to({alpha: 0}, 2000)
             .easing(me.Tween.Easing.Linear.None)
             .onComplete(function() {
                 game.data.start = true;

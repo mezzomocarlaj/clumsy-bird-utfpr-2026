@@ -19,14 +19,14 @@ game.GameOverScreen = me.ScreenObject.extend({
             });
 
         me.game.world.addChild(new me.Sprite(
-            me.game.viewport.width/2,
-            me.game.viewport.height/2 - 100,
+            game.viewportWidth()/2,
+            game.viewportHeight()/2 - 100,
             {image: 'gameover'}
         ), 12);
 
         var gameOverBG = new me.Sprite(
-            me.game.viewport.width/2,
-            me.game.viewport.height/2,
+            game.viewportWidth()/2,
+            game.viewportHeight()/2,
             {image: 'gameoverbg'}
         );
         me.game.world.addChild(gameOverBG, 10);
@@ -34,9 +34,9 @@ game.GameOverScreen = me.ScreenObject.extend({
         me.game.world.addChild(new BackgroundLayer('bg', 1));
 
         // ground
-        this.ground1 = me.pool.pull('ground', 0, me.game.viewport.height - 96);
-        this.ground2 = me.pool.pull('ground', me.game.viewport.width,
-            me.video.renderer.getHeight() - 96);
+        // [Refatoracao - Leonardo Santos] E7-Duplicacao: chao via fabrica game.createGround
+        this.ground1 = game.createGround(0);
+        this.ground2 = game.createGround(game.viewportWidth());
         me.game.world.addChild(this.ground1, 11);
         me.game.world.addChild(this.ground2, 11);
 
@@ -54,11 +54,12 @@ game.GameOverScreen = me.ScreenObject.extend({
             // constructor
             init: function() {
                 this._super(me.Renderable, 'init',
-                    [0, 0, me.game.viewport.width/2, me.game.viewport.height/2]
+                    [0, 0, game.viewportWidth()/2, game.viewportHeight()/2]
                 );
                 this.font = new me.Font('gamefont', 40, 'black', 'left');
                 this.steps = 'Steps: ' + game.data.steps.toString();
-                var top = me.save.topSteps || 0;
+                // [Refatoracao - Leonardo Santos] E7-Acesso-Disperso: leitura do recorde via game.topScore()
+                var top = game.topScore();
                 this.topSteps= 'Higher Step: ' + top.toString();
             },
 
@@ -69,16 +70,16 @@ game.GameOverScreen = me.ScreenObject.extend({
                 this.font.draw(
                     renderer,
                     this.steps,
-                    me.game.viewport.width/2 - stepsText.width/2 - 60,
-                    me.game.viewport.height/2
+                    game.viewportWidth()/2 - stepsText.width/2 - 60,
+                    game.viewportHeight()/2
                 );
 
                 //top score
                 this.font.draw(
                     renderer,
                     this.topSteps,
-                    me.game.viewport.width/2 - stepsText.width/2 - 60,
-                    me.game.viewport.height/2 + 50
+                    game.viewportWidth()/2 - stepsText.width/2 - 60,
+                    game.viewportHeight()/2 + 50
                 );
             }
         }))();

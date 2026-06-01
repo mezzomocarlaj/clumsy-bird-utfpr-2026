@@ -38,20 +38,21 @@ game.TitleScreen = me.ScreenObject.extend({
 
         //logo
         this.logo = new me.Sprite(
-            me.game.viewport.width/2,
-            me.game.viewport.height/2 - 20,
+            game.viewportWidth()/2,
+            game.viewportHeight()/2 - 20,
             {image: 'logo'}
         );
         me.game.world.addChild(this.logo, 10);
 
-        var that = this;
-        var logoTween = me.pool.pull("me.Tween", this.logo.pos)
-            .to({y: me.game.viewport.height/2 - 100}, 1000)
+        // [Refatoracao - Marcos Winicios] E7-Codigo-Morto: Remove Dead Code
+        // "var that = this" e o binding "logoTween" nunca eram lidos; mantem-se o efeito.
+        me.pool.pull("me.Tween", this.logo.pos)
+            .to({y: game.viewportHeight()/2 - 100}, 1000)
             .easing(me.Tween.Easing.Exponential.InOut).start();
 
-        this.ground1 = me.pool.pull("ground", 0, me.video.renderer.getHeight() - 96);
-        this.ground2 = me.pool.pull("ground", me.video.renderer.getWidth(),
-                                    me.video.renderer.getHeight() - 96);
+        // [Refatoracao - Leonardo Santos] E7-Duplicacao: chao via fabrica game.createGround
+        this.ground1 = game.createGround(0);
+        this.ground2 = game.createGround(game.viewportWidth());
         me.game.world.addChild(this.ground1, 11);
         me.game.world.addChild(this.ground2, 11);
 
