@@ -29,14 +29,16 @@ game.TitleScreen = me.ScreenObject.extend({
         // [Manutencao - Gabriel de Oliveira] CR#5 Tecla S cicla entre skins no menu
         me.input.bindKey(me.input.KEY.S, "cycleSkin", true);
         me.input.unbindPointer(me.input.pointer.LEFT);
+        
         var that = this;
         this.pointerHandler = function (event) {
             var px = (event && (event.gameX !== undefined ? event.gameX : event.clientX)) || 0;
             var py = (event && (event.gameY !== undefined ? event.gameY : event.clientY)) || 0;
             var dpi = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
-            if ((px >= me.game.viewport.width - 60 && px <= me.game.viewport.width - 20 && py >= 20 && py <= 60) ||
-                (px / dpi >= me.game.viewport.width - 60 && px / dpi <= me.game.viewport.width - 20 && py / dpi >= 20 && py / dpi <= 60) ||
-                (px >= (me.game.viewport.width - 60) * dpi && px <= (me.game.viewport.width - 20) * dpi && py >= 20 * dpi && py <= 60 * dpi)) {
+            var vWidth = game.viewportWidth();
+            if ((px >= vWidth - 60 && px <= vWidth - 20 && py >= 20 && py <= 60) ||
+                (px / dpi >= vWidth - 60 && px / dpi <= vWidth - 20 && py / dpi >= 20 && py / dpi <= 60) ||
+                (px >= (vWidth - 60) * dpi && px <= (vWidth - 20) * dpi && py >= 20 * dpi && py <= 60 * dpi)) {
                 return;
             }
             me.state.change(me.state.PLAY);
@@ -57,20 +59,21 @@ game.TitleScreen = me.ScreenObject.extend({
 
         //logo
         this.logo = new me.Sprite(
-            me.game.viewport.width/2,
-            me.game.viewport.height/2 - 20,
+            game.viewportWidth()/2,
+            game.viewportHeight()/2 - 20,
             {image: 'logo'}
         );
         me.game.world.addChild(this.logo, 10);
 
-        var that = this;
-        var logoTween = me.pool.pull("me.Tween", this.logo.pos)
-            .to({y: me.game.viewport.height/2 - 100}, 1000)
+        // [Refatoracao - Marcos Winicios] E7-Codigo-Morto: Remove Dead Code
+        // "var that = this" e o binding "logoTween" nunca eram lidos; mantem-se o efeito.
+        me.pool.pull("me.Tween", this.logo.pos)
+            .to({y: game.viewportHeight()/2 - 100}, 1000)
             .easing(me.Tween.Easing.Exponential.InOut).start();
 
-        this.ground1 = me.pool.pull("ground", 0, me.video.renderer.getHeight() - 96);
-        this.ground2 = me.pool.pull("ground", me.video.renderer.getWidth(),
-                                    me.video.renderer.getHeight() - 96);
+        // [Refatoracao - Leonardo Santos] E7-Duplicacao: chao via fabrica game.createGround
+        this.ground1 = game.createGround(0);
+        this.ground2 = game.createGround(game.viewportWidth());
         me.game.world.addChild(this.ground1, 11);
         me.game.world.addChild(this.ground2, 11);
 
@@ -84,7 +87,7 @@ game.TitleScreen = me.ScreenObject.extend({
         this.skinLabel = new game.HUD.SkinLabel();
         me.game.world.addChild(this.skinLabel, 13);
 
-        this.muteButton = new game.HUD.MuteButton(me.game.viewport.width - 60, 20);
+        this.muteButton = new game.HUD.MuteButton(game.viewportWidth() - 60, 20);
         me.game.world.addChild(this.muteButton, 13);
     },
 

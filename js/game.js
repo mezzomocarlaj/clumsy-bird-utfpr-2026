@@ -1,17 +1,29 @@
+// [Refatoracao - Leonardo Santos] E7-Primitive-Obsession: Combine Functions into Class
+// Os flags soltos de game.data (um Data Clump mutado em todo o codigo) e a funcao que
+// operava sobre eles (o reset da partida, antes espalhado em 6 atribuicoes soltas no
+// PlayScreen.onResetEvent) sao agrupados numa unica classe GameState. Os dados e o
+// comportamento que age sobre eles passam a morar juntos.
+function GameState() {
+    // estado persistente entre partidas (nao zerado a cada jogo)
+    this.muted = false;
+    this.skin = 'clumsy';      // [Manutencao - Gabriel de Oliveira] CR#5 Skin selecionada no menu
+    this.reset();
+}
+
+// Funcao que opera sobre os dados, agora combinada na classe (Combine Functions into Class):
+// zera apenas os campos por-partida em um lugar so.
+GameState.prototype.reset = function () {
+    this.score = 0;
+    this.steps = 0;
+    this.start = false;
+    this.newHiScore = false;
+    this.paused = false;       // [Manutencao - Gabriel de Oliveira] CR#4 Estado de pausa global
+    this.theme = 'day';        // [Manutencao - Marcos Winicios] CR#15 Tema atual (day/sunset/night)
+};
+
 var game = {
-    data: {
-        score : 0,
-        steps: 0,
-        start: false,
-        newHiScore: false,
-        muted: false,
-        // [Manutencao - Gabriel de Oliveira] CR#4 Estado de pausa global
-        paused: false,
-        // [Manutencao - Gabriel de Oliveira] CR#5 Skin selecionada no menu
-        skin: 'clumsy',
-        // [Manutencao - Marcos Winicios] CR#15 Tema atual (day/sunset/night)
-        theme: 'day'
-    },
+    data: new GameState(),
+    GameState: GameState,
 
     // [Manutencao - Gabriel de Oliveira] CR#5 Lista de skins disponiveis
     skins: ['clumsy', 'clumsy_blue', 'clumsy_red'],
@@ -205,25 +217,37 @@ var game = {
         me.state.change(me.state.MENU);
     },
 
-    // [Manutencao - Marcos Winicios] CR#15 Calcula tema a partir de steps
+    // [Refatoracao - Marcos Winicios] E7-Switch-Statements: Replace Conditional with Lookup Table
+    // themeForSteps/themeColor/themeAlpha eram tres switches paralelos sobre o MESMO
+    // conjunto de temas (day/sunset/night) — adicionar um tema exigia editar as 3 em
+    // lockstep. Agora cada tema e UMA entrada nesta tabela de configuracao.
+    THEMES: {
+        day:    { minSteps: 0,  color: '#ffffff', alpha: 0    },
+        sunset: { minSteps: 25, color: '#ff9a5c', alpha: 0.25 },
+        night:  { minSteps: 50, color: '#0b1a3a', alpha: 0.45 }
+    },
+
+    // [Refatoracao - Marcos Winicios] E7-Loop-Imperativo: Replace Loop with Pipeline
+    // O laco forEach com acumuladores mutaveis (chosen/chosenMin) escolhia o tema de maior
+    // minSteps <= steps. Vira um pipeline declarativo: filtra os temas ja atingidos e
+    // reduz ao de maior limiar. Sem variaveis de controle mutaveis; a intencao fica explicita.
     themeForSteps: function (steps) {
-        if (steps >= 50) { return 'night'; }
-        if (steps >= 25) { return 'sunset'; }
-        return 'day';
+        var themes = game.THEMES;
+        return Object.keys(themes)
+            .filter(function (name) { return steps >= themes[name].minSteps; })
+            .reduce(function (best, name) {
+                return themes[name].minSteps > themes[best].minSteps ? name : best;
+            }, 'day');
     },
 
-    // [Manutencao - Marcos Winicios] CR#15 Cor associada ao tema (overlay tonal)
+    // [Manutencao - Marcos Winicios] CR#15 Cor associada ao tema (via tabela)
     themeColor: function (theme) {
-        if (theme === 'night') { return '#0b1a3a'; }
-        if (theme === 'sunset') { return '#ff9a5c'; }
-        return '#ffffff';
+        return (game.THEMES[theme] || game.THEMES.day).color;
     },
 
-    // [Manutencao - Marcos Winicios] CR#15 Alpha do overlay tonal (0 = sem filtro)
+    // [Manutencao - Marcos Winicios] CR#15 Alpha do overlay tonal (via tabela)
     themeAlpha: function (theme) {
-        if (theme === 'night') { return 0.45; }
-        if (theme === 'sunset') { return 0.25; }
-        return 0;
+        return (game.THEMES[theme] || game.THEMES.day).alpha;
     },
 
     // [Manutencao - Gabriel de Oliveira] CR#5 Troca skin e persiste escolha
@@ -258,6 +282,36 @@ var game = {
             me.save.topSteps = steps;
             game.data.newHiScore = true;
         }
+    },
+
+    // [Refatoracao - Leonardo Santos] E7-Message-Chains: Hide Delegate
+    // As navegacoes longas/duplicadas "me.game.viewport.width/height" e
+    // "me.video.renderer.getWidth()/getHeight()" (a mesma dimensao de tela escrita de
+    // duas formas) expunham a topologia interna da engine. game passa a esconder esse
+    // delegado: os clientes pedem a dimensao ao game e nao mais a "me.game.viewport".
+    viewportWidth: function () {
+        return me.game.viewport.width;
+    },
+
+    viewportHeight: function () {
+        return me.game.viewport.height;
+    },
+
+    // [Refatoracao - Leonardo Santos] E7-Duplicacao: Replace Constructor with Factory Function
+    // A criacao do chao se repetia in 3 telas (play/title/gameover), sempre fixando a
+    // mesma linha de piso "viewportHeight() - 96" na chamada do construtor (me.pool.pull).
+    // A fabrica concentra essa construcao: a linha do piso vive num lugar so.
+    GROUND_OFFSET: 96,
+    createGround: function (x) {
+        return me.pool.pull('ground', x, game.viewportHeight() - game.GROUND_OFFSET);
+    },
+
+    // [Refatoracao - Leonardo Santos] E7-Acesso-Disperso: Encapsulate Variable
+    // O recorde persistido "me.save.topSteps" era lido direto em varios pontos, cada um
+    // com seu proprio default ("|| 0" aqui, "typeof === 'number' ? : 0" ali). O acesso de
+    // leitura passa por uma unica funcao, com um default consistente.
+    topScore: function () {
+        return (typeof me.save.topSteps === 'number') ? me.save.topSteps : 0;
     },
 
     // [Refatoracao - Gabriel de Oliveira] Centraliza lógica de mute/unmute para teclado e clique

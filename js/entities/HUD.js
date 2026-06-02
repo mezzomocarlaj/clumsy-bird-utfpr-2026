@@ -18,7 +18,7 @@ game.HUD.Container = me.Container.extend({
         // add our child score object at the top left corner
         this.addChild(new game.HUD.ScoreItem(5, 5));
         // [Manutencao - Carla Mezzomo] CR#2 Botao clicavel de mute/unmute no canto superior direito
-        this.addChild(new game.HUD.MuteButton(me.game.viewport.width - 60, 20));
+        this.addChild(new game.HUD.MuteButton(game.viewportWidth() - 60, 20));
         // [Manutencao - Gabriel de Oliveira] CR#4 Overlay "PAUSED" sobre a tela de jogo
         this.addChild(new game.HUD.PauseOverlay());
         // [Manutencao - Marcos Winicios] CR#15 Overlay de tema (dia/entardecer/noite)
@@ -63,7 +63,7 @@ game.HUD.ScoreItem = me.Renderable.extend({
     draw: function (renderer) {
         if (game.data.start && me.state.isCurrent(me.state.PLAY)) {
             // [Manutencao - Gabriel Guarnieri] CR#8 Scale centrado no texto durante o pop
-            var cx = me.game.viewport.width / 2;
+            var cx = game.viewportWidth() / 2;
             var cy = 50;
             renderer.save();
             renderer.translate(cx, cy);
@@ -84,13 +84,22 @@ game.HUD.MuteButton = me.Renderable.extend({
         this.name = 'mute-button';
         var that = this;
         this.pointerHandler = function (event) {
-            var px = (event && (event.gameX !== undefined ? event.gameX : event.clientX)) || 0;
-            var py = (event && (event.gameY !== undefined ? event.gameY : event.clientY)) || 0;
-            if (that.containsPoint(px, py)) {
-                that.toggleMute();
-                if (event && typeof event.stopPropagation === 'function') { event.stopPropagation(); }
-                return false;
-            }
+            // [Refatoracao - Carla Mezzomo] E7-Fases-Misturadas: Split Phase
+            // O handler entrelacava duas etapas: decodificar o evento em coordenadas de
+            // tela e, na mesma expressao, decidir/reagir ao clique. A fase de decodificacao
+            // saiu para pointFromEvent, que devolve um ponto intermediario {x, y}; o handler
+            // apenas consome esse ponto.
+            var point = that.pointFromEvent(event);
+            // [Refatoracao - Carla Mezzomo] E7-Condicional-Aninhada: Replace Nested Conditional with Guard Clauses
+            // Antes o corpo util ficava aninhado dentro de "if (containsPoint) { ... }".
+            // Invertido em guarda: clique fora do botao retorna cedo; o caminho principal
+            // (alternar o mute) fica no nivel de cima, sem aninhamento.
+            if (!that.containsPoint(point.x, point.y)) { return; }
+            // [Refatoracao - Carla Mezzomo] E7-Middle-Man: Inline Function
+            // "that.toggleMute()" era um repassador de uma linha para game.toggleMute();
+            // a indirecao foi removida e o handler chama o game diretamente.
+            game.toggleMute();
+            if (event && typeof event.stopPropagation === 'function') { event.stopPropagation(); }
         };
     },
 
@@ -100,6 +109,25 @@ game.HUD.MuteButton = me.Renderable.extend({
 
     onDeactivateEvent: function () {
         me.input.releasePointerEvent('pointerdown', this);
+    },
+
+    // [Refatoracao - Carla Mezzomo] E7-Fases-Misturadas: Split Phase
+    // Fase 1 da Split Phase: traduz o evento bruto de ponteiro num ponto de tela {x, y},
+    // isolando a logica de decodificacao da logica de reacao ao clique.
+    pointFromEvent: function (event) {
+        return {
+            x: this.readPointerCoord(event, 'gameX', 'clientX'),
+            y: this.readPointerCoord(event, 'gameY', 'clientY')
+        };
+    },
+
+    // [Refatoracao - Carla Mezzomo] E7-Codigo-Duplicado: Parameterize Function
+    // As leituras de X e de Y eram dois fragmentos quase identicos
+    // (event.gameX !== undefined ? event.gameX : event.clientX; o mesmo para Y).
+    // Viram UMA funcao parametrizada pelos nomes dos campos a ler.
+    readPointerCoord: function (event, gameProp, clientProp) {
+        if (!event) { return 0; }
+        return (event[gameProp] !== undefined ? event[gameProp] : event[clientProp]) || 0;
     },
 
     containsPoint: function (x, y) {
@@ -114,20 +142,16 @@ game.HUD.MuteButton = me.Renderable.extend({
         // Check if scaled down by dpi (in case x/y passed by melonJS is physical/scaled pixel coordinates)
         rx = x / dpi;
         ry = y / dpi;
-        if (rx >= this.pos.x && rx <= this.pos.x + this.width &&
-            ry >= this.pos.y && ry <= this.pos.y + this.height) {
-            return true;
-        }
-        return false;
-    },
-
-    toggleMute: function () {
-        game.toggleMute();
+        return rx >= this.pos.x && rx <= this.pos.x + this.width &&
+               ry >= this.pos.y && ry <= this.pos.y + this.height;
     },
 
     // Invocado por testes unitários e retrocompatibilidade
+    // [Refatoracao - Carla Mezzomo] E7-Middle-Man: Inline Function
+    // o antigo MuteButton.toggleMute (repassador para game.toggleMute) foi inlinado;
+    // este consumidor passa a chamar game.toggleMute() diretamente.
     onClick: function () {
-        this.toggleMute();
+        game.toggleMute();
         return true;
     },
 
@@ -145,7 +169,7 @@ game.HUD.MuteButton = me.Renderable.extend({
 // [Manutencao - Gabriel de Oliveira] CR#4 Overlay semitransparente exibido quando pausado
 game.HUD.PauseOverlay = me.Renderable.extend({
     init: function () {
-        this._super(me.Renderable, 'init', [0, 0, me.game.viewport.width, me.game.viewport.height]);
+        this._super(me.Renderable, 'init', [0, 0, game.viewportWidth(), game.viewportHeight()]);
         this.floating = true;
         this.font = new me.Font('gamefont', 64, '#fff', 'center');
         this.name = 'pause-overlay';
@@ -159,7 +183,7 @@ game.HUD.PauseOverlay = me.Renderable.extend({
 // [Manutencao - Marcos Winicios] CR#15 Overlay de tonalizacao para o tema atual
 game.HUD.ThemeOverlay = me.Renderable.extend({
     init: function () {
-        this._super(me.Renderable, 'init', [0, 0, me.game.viewport.width, me.game.viewport.height]);
+        this._super(me.Renderable, 'init', [0, 0, game.viewportWidth(), game.viewportHeight()]);
         this.floating = true;
         this.z = 5;
         this.name = 'theme-overlay';
@@ -175,10 +199,13 @@ game.HUD.ThemeOverlay = me.Renderable.extend({
     },
 
     draw: function (renderer) {
-        if (!me.state.isCurrent(me.state.PLAY)) { return; }
+        // [Refatoracao - Marcos Winicios] E7-Condicionais: Consolidate Conditional Expression
+        // Dois testes-guarda distintos levavam ao MESMO resultado (nao desenhar nada): estar
+        // fora da tela PLAY e o tema atual nao ter opacidade. Foram unificados num unico if.
         var theme = game.data.theme || 'day';
         var alpha = game.themeAlpha(theme);
-        if (alpha <= 0) { return; }
+        if (!me.state.isCurrent(me.state.PLAY) || alpha <= 0) { return; }
+        
         if (typeof renderer.save === 'function') {
             renderer.save();
         }
@@ -198,7 +225,9 @@ game.HUD.ThemeOverlay = me.Renderable.extend({
 });
 
 var BackgroundLayer = me.ImageLayer.extend({
-    init: function(image, z, speed) {
+    // [Refatoracao - Marcos Winicios] E7-Codigo-Morto: Remove Dead Code
+    // parametro "speed" era especulativo: nunca lido aqui e nenhum chamador o passa.
+    init: function(image, z) {
         var settings = {};
         settings.name = image;
         settings.width = 900;
@@ -232,8 +261,8 @@ game.HUD.TitleText = me.Renderable.extend({
     },
     draw: function (renderer) {
         var measure = this.font.measureText(renderer, this.text);
-        var xpos = me.game.viewport.width/2 - measure.width/2;
-        var ypos = me.game.viewport.height/2 + 50;
+        var xpos = game.viewportWidth()/2 - measure.width/2;
+        var ypos = game.viewportHeight()/2 + 50;
         this.font.draw(renderer, this.text, xpos, ypos);
     }
 });
@@ -245,10 +274,11 @@ game.HUD.HiScoreLabel = me.Renderable.extend({
         this.name = 'hiscore-label';
     },
     draw: function (renderer) {
-        var top = (typeof me.save.topSteps === 'number') ? me.save.topSteps : 0;
+        // [Refatoracao - Leonardo Santos] E7-Acesso-Disperso: leitura do recorde via game.topScore()
+        var top = game.topScore();
         var text = 'HIGH SCORE: ' + top;
         var measure = this.font.measureText(renderer, text);
-        this.font.draw(renderer, text, me.game.viewport.width/2 - measure.width/2, 30);
+        this.font.draw(renderer, text, game.viewportWidth()/2 - measure.width/2, 30);
     }
 });
 
@@ -261,7 +291,7 @@ game.HUD.SkinLabel = me.Renderable.extend({
     draw: function (renderer) {
         var text = 'SKIN: ' + (game.data.skin || 'clumsy') + '  (PRESS S TO CHANGE)';
         var measure = this.font.measureText(renderer, text);
-        this.font.draw(renderer, text, me.game.viewport.width/2 - measure.width/2,
-            me.game.viewport.height - 140);
+        this.font.draw(renderer, text, game.viewportWidth()/2 - measure.width/2,
+            game.viewportHeight() - 140);
     }
 });
