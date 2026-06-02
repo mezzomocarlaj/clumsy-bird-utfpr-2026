@@ -13,8 +13,11 @@ game.PlayScreen = me.ScreenObject.extend({
 
     onResetEvent: function() {
         me.game.reset();
-        me.audio.stopTrack();
-        me.audio.playTrack("theme");
+        if (game.data.muted) {
+            me.audio.disable();
+        } else if (!me.audio.getCurrentTrack()) {
+            me.audio.playTrack("theme");
+        }
 
         me.input.bindKey(me.input.KEY.SPACE, "fly", true);
         // [Manutencao - Leonardo Santos] CR#12 Seta para cima e W tambem disparam "fly"
@@ -95,7 +98,6 @@ game.PlayScreen = me.ScreenObject.extend({
     },
 
     onDestroyEvent: function() {
-        me.audio.stopTrack();
         // free the stored instance
         this.HUD = null;
         this.bird = null;

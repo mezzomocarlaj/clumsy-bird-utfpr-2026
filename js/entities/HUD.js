@@ -89,6 +89,7 @@ game.HUD.MuteButton = me.Renderable.extend({
             if (that.containsPoint(px, py)) {
                 that.toggleMute();
                 if (event && typeof event.stopPropagation === 'function') { event.stopPropagation(); }
+                return false;
             }
         };
     },
@@ -102,8 +103,22 @@ game.HUD.MuteButton = me.Renderable.extend({
     },
 
     containsPoint: function (x, y) {
-        return x >= this.pos.x && x <= this.pos.x + this.width &&
-               y >= this.pos.y && y <= this.pos.y + this.height;
+        var dpi = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+        var rx = x;
+        var ry = y;
+        // Check if inside standard bounds
+        if (rx >= this.pos.x && rx <= this.pos.x + this.width &&
+            ry >= this.pos.y && ry <= this.pos.y + this.height) {
+            return true;
+        }
+        // Check if scaled down by dpi (in case x/y passed by melonJS is physical/scaled pixel coordinates)
+        rx = x / dpi;
+        ry = y / dpi;
+        if (rx >= this.pos.x && rx <= this.pos.x + this.width &&
+            ry >= this.pos.y && ry <= this.pos.y + this.height) {
+            return true;
+        }
+        return false;
     },
 
     toggleMute: function () {
@@ -117,7 +132,6 @@ game.HUD.MuteButton = me.Renderable.extend({
     },
 
     draw: function (renderer) {
-        if (!me.state.isCurrent(me.state.PLAY)) { return; }
         if (typeof renderer.setColor === 'function') {
             renderer.setColor(game.data.muted ? '#aa2222' : '#22aa22');
         }

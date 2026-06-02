@@ -217,7 +217,7 @@ function buildMelon() {
             GAME_OVER: 2,
             set: function (id, screen) { stateMap[id] = screen; },
             change: function (id) {
-                if (currentState && typeof stateMap[currentState] !== 'undefined' &&
+                if (currentState !== null && typeof stateMap[currentState] !== 'undefined' &&
                     typeof stateMap[currentState].onDestroyEvent === 'function') {
                     stateMap[currentState].onDestroyEvent();
                 }
@@ -266,7 +266,9 @@ function buildMelon() {
             unbindPointer: function (button) { delete me.input._bindings.pointers[button]; },
             isKeyPressed: function (action) { return !!me.input._pressed[action]; },
             _press: function (action) { me.input._pressed[action] = true; },
-            _release: function (action) { me.input._pressed[action] = false; }
+            _release: function (action) { me.input._pressed[action] = false; },
+            registerPointerEvent: function (event, rect, callback) {},
+            releasePointerEvent: function (event, rect) {}
         },
         pool: {
             _registry: {},

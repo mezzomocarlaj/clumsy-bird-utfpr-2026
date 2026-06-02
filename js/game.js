@@ -67,6 +67,109 @@ var game = {
                 }
             }, false);
         }
+
+        var lastToggleTime = 0;
+
+        // Unblock Web Audio Autoplay and permanently intercept mute button clicks/key presses in capture phase
+        var checkMuteClick = function(e) {
+            if (!e) return false;
+            if (e.type === 'click' || e.type === 'mousedown' || e.type === 'touchstart' || e.type === 'pointerdown') {
+                var rect = null;
+                if (typeof document !== 'undefined') {
+                    var canvas = document.getElementsByTagName('canvas')[0];
+                    if (canvas) { rect = canvas.getBoundingClientRect(); }
+                }
+                var clientX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+                var clientY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+                if (rect && rect.width > 0 && rect.height > 0) {
+                    var pctX = (clientX - rect.left) / rect.width;
+                    var pctY = (clientY - rect.top) / rect.height;
+                    // Mute button is at x: [840, 880] (93.3% - 97.8%), y: [20, 60] (3.3% - 10.0%) of 900x600 canvas
+                    if (pctX >= 0.90 && pctX <= 0.99 && pctY >= 0.02 && pctY <= 0.12) {
+                        return true;
+                    }
+                }
+            } else if (e.type === 'keydown') {
+                var keyCode = e.keyCode || e.which;
+                if (keyCode === 77 || e.key === 'm' || e.key === 'M') {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        var permanentMuteInterceptor = function(e) {
+            if (checkMuteClick(e)) {
+                var now = Date.now();
+                if (now - lastToggleTime >= 250) {
+                    lastToggleTime = now;
+                    game.toggleMute();
+                }
+                if (typeof e.stopPropagation === 'function') { e.stopPropagation(); }
+                if (typeof e.stopImmediatePropagation === 'function') { e.stopImmediatePropagation(); }
+                if (typeof e.preventDefault === 'function') { e.preventDefault(); }
+            }
+        };
+
+        var handleGlobalPointer = function(e) {
+            var clickedMute = checkMuteClick(e);
+            
+            if (typeof Howler !== 'undefined' && Howler.ctx) {
+                if (Howler.ctx.state === 'suspended') {
+                    var promise = Howler.ctx.resume();
+                    if (promise && typeof promise.then === 'function') {
+                        promise.then(function() {
+                            console.log("AudioContext resumed successfully!");
+                            if (!game.data.muted && !me.audio.getCurrentTrack() && me.state.isCurrent(me.state.MENU) && !clickedMute) {
+                                me.audio.playTrack("theme");
+                            }
+                        });
+                    } else {
+                        console.log("AudioContext resumed (no promise support)!");
+                        if (!game.data.muted && !me.audio.getCurrentTrack() && me.state.isCurrent(me.state.MENU) && !clickedMute) {
+                            me.audio.playTrack("theme");
+                        }
+                    }
+                } else {
+                    if (!game.data.muted && !me.audio.getCurrentTrack() && me.state.isCurrent(me.state.MENU) && !clickedMute) {
+                        me.audio.playTrack("theme");
+                    }
+                }
+            }
+
+            if (clickedMute) {
+                var now = Date.now();
+                if (now - lastToggleTime >= 250) {
+                    lastToggleTime = now;
+                    game.toggleMute();
+                }
+                if (typeof e.stopPropagation === 'function') { e.stopPropagation(); }
+                if (typeof e.stopImmediatePropagation === 'function') { e.stopImmediatePropagation(); }
+                if (typeof e.preventDefault === 'function') { e.preventDefault(); }
+            }
+
+            if (typeof document !== 'undefined') {
+                document.removeEventListener('click', handleGlobalPointer, true);
+                document.removeEventListener('keydown', handleGlobalPointer, true);
+                document.removeEventListener('touchstart', handleGlobalPointer, true);
+                document.removeEventListener('mousedown', handleGlobalPointer, true);
+                document.removeEventListener('pointerdown', handleGlobalPointer, true);
+
+                document.addEventListener('click', permanentMuteInterceptor, true);
+                document.addEventListener('mousedown', permanentMuteInterceptor, true);
+                document.addEventListener('touchstart', permanentMuteInterceptor, true);
+                document.addEventListener('pointerdown', permanentMuteInterceptor, true);
+                document.addEventListener('keydown', permanentMuteInterceptor, true);
+            }
+        };
+
+        if (typeof document !== 'undefined') {
+            document.addEventListener('click', handleGlobalPointer, true);
+            document.addEventListener('keydown', handleGlobalPointer, true);
+            document.addEventListener('touchstart', handleGlobalPointer, true);
+            document.addEventListener('mousedown', handleGlobalPointer, true);
+            document.addEventListener('pointerdown', handleGlobalPointer, true);
+        }
     },
 
     "loaded": function() {
@@ -159,11 +262,17 @@ var game = {
 
     // [Refatoracao - Gabriel de Oliveira] Centraliza lógica de mute/unmute para teclado e clique
     toggleMute: function () {
+        if (typeof Howler !== 'undefined' && Howler.ctx && Howler.ctx.state === 'suspended') {
+            Howler.ctx.resume();
+        }
         game.data.muted = !game.data.muted;
         if (game.data.muted) {
             me.audio.disable();
         } else {
             me.audio.enable();
+            if (!me.audio.getCurrentTrack()) {
+                me.audio.playTrack("theme");
+            }
         }
         return game.data.muted;
     }

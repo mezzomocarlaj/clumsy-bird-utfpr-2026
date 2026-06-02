@@ -9,12 +9,27 @@ game.GameOverScreen = me.ScreenObject.extend({
         game.updateHighScore(game.data.steps);
         me.input.bindKey(me.input.KEY.ENTER, "enter", true);
         me.input.bindKey(me.input.KEY.SPACE, "enter", false);
-        me.input.bindPointer(me.input.pointer.LEFT, me.input.KEY.ENTER);
+        me.input.unbindPointer(me.input.pointer.LEFT);
+        this.pointerHandler = function (event) {
+            var px = (event && (event.gameX !== undefined ? event.gameX : event.clientX)) || 0;
+            var py = (event && (event.gameY !== undefined ? event.gameY : event.clientY)) || 0;
+            var dpi = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+            if ((px >= me.game.viewport.width - 60 && px <= me.game.viewport.width - 20 && py >= 20 && py <= 60) ||
+                (px / dpi >= me.game.viewport.width - 60 && px / dpi <= me.game.viewport.width - 20 && py / dpi >= 20 && py / dpi <= 60) ||
+                (px >= (me.game.viewport.width - 60) * dpi && px <= (me.game.viewport.width - 20) * dpi && py >= 20 * dpi && py <= 60 * dpi)) {
+                return;
+            }
+            me.state.change(me.state.MENU);
+        };
+        me.input.registerPointerEvent('pointerdown', me.game.world, this.pointerHandler);
 
         this.handler = me.event.subscribe(me.event.KEYDOWN,
             function (action, keyCode, edge) {
                 if (action === "enter") {
                     me.state.change(me.state.MENU);
+                }
+                if (action === "mute") {
+                    game.toggleMute();
                 }
             });
 
@@ -83,6 +98,9 @@ game.GameOverScreen = me.ScreenObject.extend({
             }
         }))();
         me.game.world.addChild(this.dialog, 12);
+
+        this.muteButton = new game.HUD.MuteButton(me.game.viewport.width - 60, 20);
+        me.game.world.addChild(this.muteButton, 13);
     },
 
     onDestroyEvent: function() {
@@ -90,10 +108,13 @@ game.GameOverScreen = me.ScreenObject.extend({
         me.event.unsubscribe(this.handler);
         me.input.unbindKey(me.input.KEY.ENTER);
         me.input.unbindKey(me.input.KEY.SPACE);
-        me.input.unbindPointer(me.input.pointer.LEFT);
+        me.input.releasePointerEvent('pointerdown', me.game.world);
         this.ground1 = null;
         this.ground2 = null;
         this.font = null;
-        me.audio.stopTrack();
+        if (this.muteButton) {
+            me.game.world.removeChild(this.muteButton);
+            this.muteButton = null;
+        }
     }
 });
