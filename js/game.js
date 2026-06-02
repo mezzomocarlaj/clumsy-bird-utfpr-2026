@@ -274,6 +274,9 @@ var game = {
                 me.audio.playTrack("theme");
             }
         }
+        if (typeof me !== 'undefined' && me.game && typeof me.game.repaint === 'function') {
+            me.game.repaint();
+        }
         return game.data.muted;
     }
 };
