@@ -138,14 +138,7 @@ game.HUD.PauseOverlay = me.Renderable.extend({
     },
 
     draw: function (renderer) {
-        if (!game.data.paused) { return; }
-        if (typeof renderer.setColor === 'function') {
-            renderer.setColor('rgba(0,0,0,0.5)');
-        }
-        if (typeof renderer.fillRect === 'function') {
-            renderer.fillRect(0, 0, this.width, this.height);
-        }
-        this.font.draw(renderer, 'PAUSED', this.width / 2, this.height / 2 - 40);
+        // no-op: rendering handled by HTML overlay with backdrop-filter blur
     }
 });
 

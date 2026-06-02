@@ -79,14 +79,17 @@ game.PlayScreen = me.ScreenObject.extend({
 
     // [Manutencao - Gabriel de Oliveira] CR#4 Alterna estado pausado/rodando e aciona me.state.pause/resume
     togglePause: function () {
+        var overlay = typeof document !== 'undefined' ? document.getElementById('pause-overlay') : null;
         if (game.data.paused) {
             game.data.paused = false;
             if (me.state.resume) { me.state.resume(); }
             me.audio.resumeTrack();
+            if (overlay) { overlay.classList.remove('visible'); }
         } else {
             game.data.paused = true;
             if (me.state.pause) { me.state.pause(); }
             me.audio.pauseTrack();
+            if (overlay) { overlay.classList.add('visible'); }
         }
         return game.data.paused;
     },
@@ -109,5 +112,7 @@ game.PlayScreen = me.ScreenObject.extend({
         // [Manutencao - Gabriel de Oliveira] CR#4 Garante que a pausa nao vaze para a proxima tela
         game.data.paused = false;
         if (me.state.resume) { me.state.resume(); }
+        var overlay = typeof document !== 'undefined' ? document.getElementById('pause-overlay') : null;
+        if (overlay) { overlay.classList.remove('visible'); }
     }
 });
