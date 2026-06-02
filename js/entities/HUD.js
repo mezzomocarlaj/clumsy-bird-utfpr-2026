@@ -179,6 +179,9 @@ game.HUD.ThemeOverlay = me.Renderable.extend({
         var theme = game.data.theme || 'day';
         var alpha = game.themeAlpha(theme);
         if (alpha <= 0) { return; }
+        if (typeof renderer.save === 'function') {
+            renderer.save();
+        }
         if (typeof renderer.setColor === 'function') {
             renderer.setColor(game.themeColor(theme));
         }
@@ -188,8 +191,8 @@ game.HUD.ThemeOverlay = me.Renderable.extend({
         if (typeof renderer.fillRect === 'function') {
             renderer.fillRect(0, 0, this.width, this.height);
         }
-        if (typeof renderer.setGlobalAlpha === 'function') {
-            renderer.setGlobalAlpha(1);
+        if (typeof renderer.restore === 'function') {
+            renderer.restore();
         }
     }
 });

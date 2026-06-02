@@ -71,3 +71,31 @@ test('CR#15: Play reseta tema para "day" ao iniciar nova partida', function () {
     ctx.me.state.change(ctx.me.state.PLAY);
     assert.strictEqual(ctx.game.data.theme, 'day', 'tema reseta ao entrar no Play');
 });
+
+test('CR#15: HUD.ThemeOverlay.draw chama save e restore para proteger o estado do renderer', function () {
+    var ctx = loader.freshProject();
+    ctx.game.onload();
+    var overlay = new ctx.game.HUD.ThemeOverlay();
+
+    ctx.me.state.change(ctx.me.state.PLAY);
+    ctx.game.data.theme = 'night';
+
+    var calls = [];
+    var mockRenderer = {
+        save: function () { calls.push('save'); },
+        setColor: function (c) { calls.push('setColor:' + c); },
+        setGlobalAlpha: function (a) { calls.push('setGlobalAlpha:' + a); },
+        fillRect: function (x, y, w, h) { calls.push('fillRect'); },
+        restore: function () { calls.push('restore'); }
+    };
+
+    overlay.draw(mockRenderer);
+
+    assert.deepStrictEqual(calls, [
+        'save',
+        'setColor:#0b1a3a',
+        'setGlobalAlpha:0.45',
+        'fillRect',
+        'restore'
+    ], 'deve chamar save e restore para proteger o renderer de poluicao de cor');
+});
