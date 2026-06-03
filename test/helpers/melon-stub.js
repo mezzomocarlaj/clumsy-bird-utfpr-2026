@@ -117,6 +117,15 @@ MockRenderableClass.prototype.init = function (x, y, w, h) {
     this.floating = false;
     this.z = 0;
 };
+// Faithfully mirror me.Renderable.prototype.scale: real MelonJS exposes it as a
+// NON-WRITABLE method (writable:false). Because the game source is non-strict ES5,
+// `this.scale = <number>` on a Renderable silently fails and `scale` stays a function.
+// Modelling that here lets the suite catch any renderable state whose name collides
+// with the engine's scale() API (the original CR#8 pulse bug used `this.scale`).
+Object.defineProperty(MockRenderableClass.prototype, 'scale', {
+    value: function () { return this; },
+    writable: false, enumerable: false, configurable: true
+});
 MockRenderableClass.extend = extendClass(MockRenderableClass);
 
 function MockContainer() {

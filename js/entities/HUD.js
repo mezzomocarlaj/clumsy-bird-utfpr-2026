@@ -33,10 +33,18 @@ game.HUD.ScoreItem = me.Renderable.extend({
 
         // local copy of the global score
         this.stepsFont = new me.Font('gamefont', 80, '#000', 'center');
+        // [Manutencao - Gabriel Guarnieri] CR#8 Baseline 'middle' centra o glifo no ponto
+        // de desenho, para que a escala do pop pulse no proprio numero (e nao o desloque).
+        this.stepsFont.textBaseline = 'middle';
 
-        // [Manutencao - Gabriel Guarnieri] CR#8 Estado para pulso de escala no score
+        // [Manutencao - Gabriel Guarnieri] CR#8 Estado para pulso de escala no score.
+        // IMPORTANTE: a propriedade NAO pode se chamar 'scale'. me.Renderable.prototype.scale
+        // e um metodo nao-gravavel (writable:false); como o codigo e ES5 nao-estrito, a
+        // atribuicao "this.scale = 1.0" falha silenciosamente e 'scale' permanece sendo a
+        // funcao herdada. O tween nunca anima e draw passa uma funcao para renderer.scale().
+        // Usamos 'popScale' para nao colidir com a API do engine.
         this.lastSteps = game.data.steps;
-        this.scale = 1.0;
+        this.popScale = 1.0;
         this.scaleTween = null;
 
         // make sure we use screen coordinates
@@ -45,30 +53,34 @@ game.HUD.ScoreItem = me.Renderable.extend({
 
     // [Manutencao - Gabriel Guarnieri] CR#8 Dispara tween de pulso quando game.data.steps incrementa
     update: function(dt) {
+        var isTweening = this.popScale > 1.0;
+        var changed = false;
         if (game.data.steps > this.lastSteps) {
             this.lastSteps = game.data.steps;
             if (this.scaleTween) {
                 this.scaleTween.stop();
             }
-            this.scale = 1.5;
+            this.popScale = 1.6;
             this.scaleTween = new me.Tween(this)
-                .to({ scale: 1.0 }, 220)
+                .to({ popScale: 1.0 }, 600)
                 .easing(me.Tween.Easing.Quadratic.Out)
                 .start();
-            return true;
+            changed = true;
         }
-        return false;
+        return changed || isTweening;
     },
 
     draw: function (renderer) {
         if (game.data.start && me.state.isCurrent(me.state.PLAY)) {
-            // [Manutencao - Gabriel Guarnieri] CR#8 Scale centrado no texto durante o pop
+            // [Manutencao - Gabriel Guarnieri] CR#8 Pulso centrado no proprio numero:
+            // pivota a escala no centro do glifo (translate -> scale -> desenho em 0,0)
+            // para o numero crescer/encolher no lugar em vez de ser jogado para fora da tela.
             var cx = game.viewportWidth() / 2;
-            var cy = 50;
+            var cy = 92;
             renderer.save();
             renderer.translate(cx, cy);
-            renderer.scale(this.scale, this.scale);
-            this.stepsFont.draw(renderer, game.data.steps, 0, -40);
+            renderer.scale(this.popScale, this.popScale);
+            this.stepsFont.draw(renderer, game.data.steps, 0, 0);
             renderer.restore();
         }
     }
