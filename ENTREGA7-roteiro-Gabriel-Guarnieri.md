@@ -5,7 +5,19 @@
 
 > Quatro refatorações distintas, todas preservando comportamento (refactorings, não
 > features). Nenhuma delas é "Rename". Suíte completa: **92 testes verdes**
-> (`node --test "test/*.test.js"`), incluindo `test/e7-guarnieri.test.js`.
+> (`node --test test/*.test.js`), incluindo `test/e7-guarnieri.test.js` (11 testes).
+
+> **Continuidade com a Entrega 6:** os maus cheiros corrigidos aqui são os mesmos
+> apresentados no vídeo da Entrega 6 — *Números Mágicos* (corrigido pela refatoração 1) e
+> *Código Duplicado* (corrigido pelas refatorações 2 e 3).
+
+---
+
+### Checklist antes de gravar *(não ler no vídeo)*
+- [ ] Rodar o comando de teste **sem aspas** (`node --test test/*.test.js`); o shell expande
+  o `test/*.test.js`. Com aspas, esta versão do Node devolve "Could not find".
+- [ ] Fonte do editor grande; terminal aberto na pasta do projeto.
+- [ ] Gravar este vídeo (Entrega 7) **depois** do da Entrega 6.
 
 ---
 
@@ -35,7 +47,7 @@ arquivo `js/entities/entities.js`. Em seguida abrir um terminal.
 
 **Ação:** Rodar no terminal:
 ```bash
-node --test "test/*.test.js"
+node --test test/*.test.js
 ```
 Apontar para a linha `# pass 92` / `# fail 0`.
 
